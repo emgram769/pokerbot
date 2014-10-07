@@ -48,5 +48,6 @@ $(OBJDIR):
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(INCDIR)/*.h Makefile
 	$(CXX) $(CXXFLAGS) $< -c -o $@
 
+.PHONY: clean
 clean:
 	rm -rf $(OBJDIR) pokerbot *.so
