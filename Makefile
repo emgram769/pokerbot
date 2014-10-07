@@ -21,7 +21,7 @@ PYLIB=pokerbot
 ifeq ($(ARCH), Darwin)
 PYFLAGS+=-dynamiclib
 else
-PYFLAGS+=-dynamiclib
+PYFLAGS+=-shared
 endif
 
 PYSRCS=$(SRCDIR)/python_wrap.cpp
