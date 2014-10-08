@@ -30,6 +30,9 @@
 *.swo
 *.swp
 
+# OS X stuff
+.DS_Store
+
 # Our stuff
 pokerbot
 objs/

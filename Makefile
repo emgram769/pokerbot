@@ -38,6 +38,9 @@ run:	pokerbot
 python: $(OBJS)
 	$(CXX) $(PYFLAGS) $(CXXFLAGS) $(LDFLAGS) $^ $(PYSRCS) -o $(PYLIB).so
 
+pythontest:
+	python python_tests.py
+
 pokerbot: $(OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o $@
 

@@ -1,4 +1,5 @@
 #include <Python.h>
+#include <pokerbot.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -9,8 +10,8 @@ extern "C" {
  */
 static PyObject* py_botChoice(PyObject* self, PyObject* args)
 {
-    char *s = "I choose 3!";
-    return Py_BuildValue("s", s);
+    unsigned long long choice = bot_choice(NULL);
+    return Py_BuildValue("K", choice);
 }
 
 /*
@@ -18,9 +19,8 @@ static PyObject* py_botChoice(PyObject* self, PyObject* args)
  */
 static PyObject* py_botStrength(PyObject* self, PyObject* args)
 {
-    // double x, y;
-    // PyArg_ParseTuple(args, "dd", &x, &y);
-    return Py_BuildValue("d", 9000.00001);
+    double strength = bot_strength(NULL);
+    return Py_BuildValue("d", strength);
 }
 
 /*
