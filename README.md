@@ -3,11 +3,7 @@ pokerbot
 
 A bot that plays poker.
 
-How To Use
-====
-
-As a standalone executable
-==
+##As a standalone executable
 
 1) Compile the bot as a standalone executable
 
@@ -17,8 +13,7 @@ As a standalone executable
 
     make run
 
-As a python module
-==
+##As a python module
 
 1) Compile the shared library
 
