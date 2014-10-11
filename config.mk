@@ -2,5 +2,4 @@
 
 PYTHON_VERSION=2.7
 
-PYTHON_DEV_DIR=/opt/local/Library/Frameworks/Python.framework/Versions/$(PYTHON_VERSION)/include/python$(PYTHON_VERSION)
-
+PYTHON_DEV_DIR=/System/Library/Frameworks/Python.framework/Versions/$(PYTHON_VERSION)/include/python$(PYTHON_VERSION)

@@ -36,3 +36,4 @@
 # Our stuff
 pokerbot
 objs/
+config.mk
