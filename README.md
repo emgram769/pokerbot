@@ -9,7 +9,7 @@ A bot that plays poker.
 
     make
 
-2) Run the bot.
+2) Run the bot
 
     make run
 
