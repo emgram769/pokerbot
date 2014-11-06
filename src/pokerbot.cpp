@@ -174,6 +174,8 @@ int init_pokerbot(void) {
 
 int main(int argc, char* argv[]) {
     printf("Hi I'm a poker bot!\n");
+    card pair_test[7] = {1, 2, 15, 4, 3, 5, 7};
+    printf("Is pair %d\n", is_pair(pair_test));
     return init_pokerbot();
 }
 
