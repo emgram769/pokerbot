@@ -17,7 +17,7 @@ int get_card(card c, suit * s, rank * r) {
     *r = (rank)(c % (NUM_RANKS + 1));
 
     /* Suit is always 0 - 3. */
-    *s = (suit)(c / NUM_SUITS);
+    *s = (suit)(c / NUM_RANKS);
 
     return 0;
 }
@@ -144,6 +144,16 @@ static inline bool is_straight_flush(card * cards) {
 
     }
     return 0;
+}
+
+static inline hand best_hand(card * cards)
+{
+	//look for pair, triple, or quadruple
+	int 
+	for (int i = 0; i < NUM_BOARD_CARDS + NUM_HELD_CARDS; i++)
+	{
+
+	}
 }
 
 void simulate_hands(game_state * game) {
