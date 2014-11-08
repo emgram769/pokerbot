@@ -10,7 +10,7 @@ CXX=g++
 SRCS=$(SRCDIR)/pokerbot.cpp
 OBJS=$(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRCS))
 
-CXXFLAGS+=-std=c++0x -O2 -I$(INCDIR)
+CXXFLAGS+=-std=c++0x -O2 -I$(INCDIR) -fPIC
 LDFLAGS+=
 
 ######## PYTHON variables ########

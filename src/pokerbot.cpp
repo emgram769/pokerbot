@@ -173,17 +173,22 @@ unsigned long long bot_choice(game_state * game) {
 }
 
 double bot_strength(game_state * game) {
+    /* Get a random variable. */
     int r = rand();
     return (double)(r % 1000)/1000;
 }
 
 int init_pokerbot(void) {
+    /* Sets up random stuff.  Only call this once. */
     srand(time(NULL));
     return 0;
 }
 
 int main(int argc, char* argv[]) {
     printf("Hi I'm a poker bot!\n");
+    card pair_test[7] = {1, 2, 15, 4, 3, 5, 7};
+    /* Should be 1 not 0. */
+    printf("Is pair %d\n", is_pair(pair_test));
     return init_pokerbot();
 }
 
