@@ -17,6 +17,7 @@ enum rank { UNKNOWN, ACE_LOW, TWO, THREE, FOUR, FIVE,
 enum hand_rank { HIGH_CARD, PAIR, TWO_PAIR,
                  TRIPLE, STRAIGHT, FLUSH, FULL_HOUSE,
                  QUADRUPLE, STRAIGHT_FLUSH };
+enum hand_compare_res {LOSES, TIES, BEATS};
 
 /* Cards are defined as follows:
  *  suit s = card_num / NUM_RANKS;
