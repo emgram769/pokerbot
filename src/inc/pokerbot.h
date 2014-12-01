@@ -27,7 +27,7 @@ typedef unsigned int card;
 
 typedef struct _hand {
     hand_rank type;                 /* The highest hand rank made. */
-    card cards[NUM_HAND_CARDS];     /* Cards in order or high card to low. */
+    card * cards[NUM_HAND_CARDS];     /* Cards in order or high card to low. */
 } hand;
 
 typedef struct _player {
