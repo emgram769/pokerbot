@@ -815,8 +815,6 @@ double simulate_hands(game_state * game) {
         return (1.0 * (double)won) / counted;
     }
     
-    unsigned long MONTE_CARLO = 10000000;
-
     if (count_cards(game->board) == 3) {
         unsigned long won = 0;
 
