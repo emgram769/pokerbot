@@ -1,17 +1,16 @@
 
-
+# -*- coding: utf-8 -*-
 from Tkinter import *
 import random
 import copy
-import winsound
-
+import pokerbot
 # --------------------------------- M O D E L --------------------------------
 def initGameVars():
     #misc
     g.diagUp= False
     g.potOutlineWidth=5
     g.playCounter = 0
-    
+
     #colors
     g.bgColor = 'dark green'
     g.spaceColor = 'black'
@@ -21,14 +20,17 @@ def initGameVars():
     g.blindsFill = ['purple','yellow']#little blind first
     g.diagColor = 'gray'
     g.inputBoxColor = 'white'
-    
+
     #card vars
-    g.SUITS = ['S','C','H','D']
-    g.RANKS = range(2,15)
-    g.FACE = range(2,11) + ['J','Q','K','A']
+    g.SUITS = ['♠','♣','♥','♦']
+    g.SUIT_VAL = range(4)
+    g.RANKS = range(0,14)
+    g.FACE = ['A']+range(2,11) + ['J','Q','K','A']
+    g.firstRoundCards = [(9,2),(12,1),(4,3)]
+    g.round = 1
     g.tableCards = [] #no cards placed on table at start
 
-    
+
     #player vars
     g.numPlayers = 4
     class Struct: pass
@@ -39,6 +41,8 @@ def initGameVars():
         g.player[i].amountDue = 0
         g.player[i].index = i
         g.player[i].card =[(False,False),(False,False)]
+        g.player[i].isBot = False
+    g.player[2].isBot = True #set player 2 as bot
 
     #GAME VARS
     g.potSize = 0
@@ -48,7 +52,7 @@ def initGameVars():
     g.activePlayer = g.player[(g.bigBlind+1)%g.numPlayers]
     g.blindsText = ['Little Blind','Big Blind'] #little blind first
     g.highestBet = 0
-    
+
     #viewVars
     g.actionBarHeight=70
     g.actionLabels = ['Call','Check','Raise','Fold']
@@ -56,14 +60,14 @@ def initGameVars():
     g.diagCaptionFont = 'Arial 22'
     g.raiseAmount = ''
 
-def initGraphicsVars():    
+def initGraphicsVars():
     spaceHeight = int((g.screenHeight-g.actionBarHeight)/4)
     spaceWidth = int(g.screenWidth/3)
     g.actionBar=(0,g.screenHeight-g.actionBarHeight,g.screenWidth,g.screenHeight)
     #(x,y) top left corner of  player space
     x = int((g.screenWidth-spaceWidth)/2)
     y = g.screenHeight-g.actionBarHeight-spaceHeight
-    
+
     g.player[0].space=(x,y,x+spaceWidth,y+spaceHeight)
     y = int(g.screenHeight-g.actionBarHeight-spaceWidth)/2
     g.player[1].space =(0,y,spaceHeight,y+spaceWidth)
@@ -76,19 +80,19 @@ def initGraphicsVars():
     g.buttonSpace=[]
     x=0
     y=g.screenHeight-g.actionBarHeight
-    
+
     for i in xrange(4):
         g.buttonSpace.append((x,y,x+buttonWidth,y+g.actionBarHeight))
         x+=buttonWidth
-    
+
     #card and blind spaces
     cardWidth = int(spaceWidth/4) #do not change
     cardHeight = int(spaceHeight/1.5)
-    
+
     for i in xrange(g.numPlayers):
         g.player[i].cardSpace = [(0,0,0,0),(0,0,0,0)] #initialize card spaces
 
-    
+
     y = g.player[0].space[3]-cardHeight
     for i in [0,2]: #players on top or bottom
         space = g.player[i].space
@@ -107,7 +111,7 @@ def initGraphicsVars():
     x = g.player[1].space[0]
     for i in [1,3]: #players on sides
         (width, height) = (cardHeight, cardWidth)#swap width and height
-        
+
         y = g.player[i].space[1]
         blindBounds=(x,y,x+width,y+height)
         g.player[i].blindCenter = center(blindBounds)
@@ -134,7 +138,7 @@ def initGraphicsVars():
     x = g.player[1].space[2]+spacing
     y =g.player[0].space[1]-cardHeight-margin
     g.tableCardSpace=[]
-    
+
     for i in xrange(5):
         g.tableCardSpace.append((x,y,x+cardWidth,y+cardHeight))
         x+=cardWidth
@@ -190,7 +194,7 @@ def keyPressed(event):
         if(event.keysym == 'Return'):
             if(int(g.raiseAmount) > g.activePlayer.stackSize or
                int(g.raiseAmount) < (g.activePlayer.amountDue + g.blinds)):
-                winsound.Beep(700,300)
+                pass
             else:
                 g.diagUp = False
                 makeRaise(int(g.raiseAmount))
@@ -198,25 +202,27 @@ def keyPressed(event):
                 redrawAll()
         else:
             drawDiag()
-    
-    
+
+
 def doCall():
     if(g.activePlayer.amountDue!=0):
 
         #if player cannot meet amount due, make split pot
         if(g.activePlayer.stackSize < g.activePlayer.amountDue):
-            bet(g.activePlayer,g.player.StackSize)
-            g.player.stackSize = 0
-            g.player.allIn = True
+            bet(g.activePlayer,g.activePlayer.stackSize)
+            g.activePlayer.stackSize = 0
+            g.activePlayer.allIn = True
+            g.activePlayer.amountDue = 0
+            g.allInPlayers.append(g.activePlayer)
         else:
             bet(g.activePlayer,g.activePlayer.amountDue)
-            switchActivePlayer()
+        switchActivePlayer()
         if(g.notRaised == False and g.activePlayer.amountDue == 0):
             nextRound()
 
 def doCheck():
     #can only check if a bet hasnt been made
-    
+
     if(g.notRaised == True and g.activePlayer.amountDue==0):
         if(g.activePlayer==g.lastToCheck):
             nextRound()
@@ -225,12 +231,12 @@ def doCheck():
 
 def doRaise():
     g.diagUp=True
-    g.notRaised = False
 
 def makeRaise(amount):
+    g.notRaised = False
     bet(g.activePlayer,amount)
     switchActivePlayer()
-    
+
 def doFold():
     g.activePlayer.folded=True
     g.numActivePlayers-=1
@@ -239,58 +245,144 @@ def doFold():
     switchActivePlayer()
     if(g.notRaised == False and g.activePlayer.amountDue == 0):
         nextRound()
+
 def nextRound():
-    if(g.playCounter==0):
+    g.playCounter+=1
+    if(g.playCounter==1):
+        print 'dealing'
         deal()
         preFlop()
-    elif(g.playCounter==1):
+    elif(g.playCounter==2):
         #FLOP
+        print 'flop'
         for i in xrange(3):
             g.tableCards.append(getCard())
+        if(g.round == 1):
+            g.tableCards=g.firstRoundCards[:3]
         nextBetRound()
-        
-    elif(g.playCounter==2 or g.playCounter == 3):
+    elif(g.playCounter==3 or g.playCounter == 4):
         #turn and river
-        g.tableCards.append(getCard())
+        print 'turn/river'
+        if(g.round==1):
+            if(len(g.tableCards)==3):
+                g.tableCards.append((10,3))
+            else:
+               g.tableCards.append((2,1))
         nextBetRound()
-    else:
+    elif(g.playCounter ==5):
         showdown()
-    g.playCounter+=1
+
+
+def getActivePlayers():
+    activePlayers = []
+    for i in xrange(g.numPlayers):
+        if(g.player[i].folded == False):
+            activePlayers.append(i)
+    return activePlayers
+
+def makeIntCard(rank, suit):
+    card = (14 + 1) * g.SUIT_VAL[suit] #magic number but who cares
+    card+= rank  + 1
+    return card
 
 def showdown():
-    pass
+    print 'called'
+    activePlayers = getActivePlayers()
+    g.tableIntCards = []
+    assert(len(activePlayers) > 1)
+    for i in xrange(len(g.tableCards)):
+        (rank,suit) = (g.tableCards[i][0],g.tableCards[i][1])
+        g.tableIntCards.append(makeIntCard(rank,suit))
+
+    for i in activePlayers:
+        print i
+        g.player[i].intCards=[]
+        for j in xrange(2): #magic number again
+            print j,g.player[i].intCards
+            (rank,suit) = (g.player[i].card[j][0],g.player[i].card[j][1])
+            g.player[i].intCards.append(makeIntCard(rank,suit))
+
+    winner = compareTwoPlayers(g.player[activePlayers[0]],
+                                g.player[activePlayers[1]])
+    if(len(activePlayers)==2):
+        giveWinner(winner)
+    else:
+        winner2 = compareTwoPlayers(g.player[activePlayers[2]],
+                                     g.player[winner])
+        if(len(activePlayers)==3):
+            giveWinner(winner2)
+        else:
+            giveWinner(compareTwoPlayers(g.player[activePlayers[3]],
+                                         g.player[winner2]))
+    g.playCounter = 0
+    g.round+=1
+
+
+def giveWinner(i):
+    g.player[i].stackSize+= g.potSize
+
+def compareTwoPlayers(p1,p2):
+    (card1,card2,card3,card4,card5)=g.tableIntCards
+    winner = pokerbot.bestHand(p1.intCards[0],p1.intCards[1],
+                               p2.intCards[0],p2.intCards[1],
+                        card1,card2,card3,card4,card5)
+
+
+    if(winner == 2):
+        return p1.index
+    else:
+        return p2.index
+
 
 def deal():
     #no players have folded yet
     g.numActivePlayers = g.numPlayers
     for i in xrange(4):
         g.player[i].folded = False
-        #g.player[i].allIn = False
+        g.player[i].allIn = False
+        g.allInPlayers =[]
     g.deck = []
     g.littleBlind = (g.littleBlind+1)%g.numPlayers
     g.bigBlind = (g.bigBlind+1)%g.numPlayers
-    
+
     #generate deck
     for i in xrange(len(g.SUITS)):
-        for j in xrange(len(g.RANKS)):
-            g.deck.append((g.RANKS[j],g.SUITS[i]))
-    
+        for j in xrange(1,len(g.RANKS)):
+            g.deck.append((g.RANKS[j],g.SUIT_VAL[i]))
+
 
         #deal 2 random cards to each player
         for j in xrange(2):
             #deal card and remove from deck
             g.player[i].card[j]=getCard()
+    if(g.round==1):
+        firstRoundPlayerCards()
+    elif(g.round==2):
+        secondRoundPlayerCards()
     redrawAll()
 
+def firstRoundPlayerCards():
+    g.player[0].card=[(12,2),(10,0)]
+    g.player[1].card=[(6,3),(8,2)]
+    g.player[2].card=[(8,1),(11,2)]
+    g.player[3].card=[(2,3),(7,1)]
+
+def secondRoundPlayerCards():
+    g.player[0].card=[(12,2),(10,0)]
+    g.player[1].card=[(8,3),(6,2)]
+    g.player[2].card=[(9,2),(4,3)]
+    g.player[3].card=[(12,3),(12,2)]
+    
 def preFlop():
     g.potSize = 0
     g.tableCards = []
-    
+    g.tableIntCards = []
+
     nextBetRound()
     #put up blinds
     bet(g.player[g.littleBlind],int(g.blinds/2))
     bet(g.player[g.bigBlind],g.blinds)
-    
+
     #person after big blind starts, only for pre-flop
     g.activePlayer = g.player[(g.bigBlind+1)% g.numPlayers]
     g.lastToCheck= g.player[g.bigBlind]
@@ -303,7 +395,8 @@ def nextBetRound():
     #set active player
     g.notRaised = True
     g.highestBet=0
-    g.activePlayer = nextNonFoldedPlayer(g.player[g.littleBlind])
+    g.activePlayer = prevPlayer(g.player[g.littleBlind])
+    switchActivePlayer()
     g.lastToCheck = prevNonFoldedPlayer(
                     g.player[(g.littleBlind-1)%g.numPlayers])
     
@@ -314,14 +407,18 @@ def bet(player, amount):
     if(player.bet > g.highestBet): g.highestBet = player.bet
     for i in xrange(g.numPlayers):
         g.player[i].amountDue = g.highestBet - g.player[i].bet
+        print g.highestBet,g.player[i].bet,g.player[i].amountDue
         assert(g.player[i].amountDue>=0)
-    
+
+    for i in xrange(g.numPlayers):
+        print 'Player ',i,' amount due: ',g.player[i].amountDue
+
 def getCard():
     assert(len(g.deck)!=0) #deck must have cards in it
     card=(random.choice(xrange(len(g.deck))))
     return g.deck.pop(card)
 
-    
+
 def getMin(bounds):
     (x1,y1,x2,y2)=bounds
     x = int((abs(x1-x2)/2))
@@ -347,13 +444,58 @@ def endRoundBeforeShow():
     assert(g.numActivePlayers == 1) #only end before show if 1 player remains
     for i in xrange(g.numPlayers):
         if(g.player[i].folded==False):
-            g.player[i].stackSize+= g.potSize
-            g.playCounter = 0
-            nextRound()
+            winner = i
+    giveWinner(winner)
 
 def switchActivePlayer():
+    print 'aybaybay'
     #moves to next player, then checks for the next nonfolded player
     g.activePlayer=nextNonFoldedPlayer(nextPlayer(g.activePlayer))
+    if(g.activePlayer.isBot):
+       botAction()
+
+def botAction():
+    print 'Rise up di bot action!'
+    print g.notRaised
+    if(g.notRaised == False and g.activePlayer.amountDue == 0):
+        nextRound()
+    else:
+        print 'ya trick'
+        player=g.activePlayer
+        chance = 2.0
+        c1 = makeIntCard(player.card[0][0], player.card[0][1])
+        c2 = makeIntCard(player.card[1][0],player.card[1][1])
+        if(len(g.tableCards)>=3):
+            c3 = makeIntCard(g.tableCards[0][0],g.tableCards[0][1])
+            c4 = makeIntCard(g.tableCards[1][0],g.tableCards[1][1])
+            c5 = makeIntCard(g.tableCards[2][0],g.tableCards[2][1])
+            chance = pokerbot.botStrength(c1,c2,c3,c4,c5,0,0)
+            if(len(g.tableCards)==3):
+                chance = pokerbot.botStrength(c1,c2,c3,c4,c5,0,0)
+            elif(len(g.tableCards)==4):
+                c6=makeIntCard(g.tableCards[3][0],g.tableCards[3][1])
+                chance = pokerbot.botStrength(c1,c2,c3,c4,c5,c6,0)
+            else:
+                c6=makeIntCard(g.tableCards[3][0],g.tableCards[3][1])
+                c7=makeIntCard(g.tableCards[4][0],g.tableCards[4][1])
+                chance = pokerbot.botStrength(c1,c2,c3,c4,c5,c6,c7)
+        else:
+            chance = pokerbot.botStrength(c1,c2,0,0,0,0,0)
+        botBet = int(g.potSize * (chance ** g.numActivePlayers))
+        print 'I have a ',chance**g.numActivePlayers, ' chance to win!'
+        print 'I want to bet ',botBet
+        if(botBet >= g.activePlayer.amountDue + g.blinds):
+            print 'raised'
+            makeRaise(botBet)
+        elif(botBet<g.activePlayer.amountDue):
+            print 'folded'
+            doFold()
+        elif(g.activePlayer.amountDue==0):
+            print 'checked'
+            doCheck()
+        else:
+            print 'called'
+            doCall()
 
 def prevNonFoldedPlayer(player):
     while(player.folded==True):
@@ -368,7 +510,7 @@ def nextNonFoldedPlayer(player): #also skips all in players
 
 def prevPlayer(player):
     return g.player[(player.index-1)%g.numPlayers]
-    
+
 def nextPlayer(player):
     return g.player[(player.index+1)%g.numPlayers]
 
@@ -413,8 +555,9 @@ def drawCircle(cx,cy,r,fill='black'):
 def drawCard(pos,card):
     x=int(pos[0] + (0.8* (abs(pos[2]-pos[0]))))
     y=int(pos[1]+ (0.25*abs(pos[1]-pos[3])))
+    suit=g.SUITS[card[1]]
     caption = g.FACE[card[0]-2]
-    if card[1]== 'D' or card[1]== 'H':
+    if suit == '♦' or suit == '♥':
         color = 'red'
     else:
         color = 'black'
@@ -422,7 +565,7 @@ def drawCard(pos,card):
     canvas.create_text(x,y,text=caption,anchor= CENTER,
                        font ='Arial 32', fill = color)
     (x,y) = center(pos)
-    canvas.create_text(x,y,text=card[1],anchor= CENTER,
+    canvas.create_text(x,y,text=suit,anchor= CENTER,
                        fill = color, font ='Arial 32')
 def redrawAll():
     #canvas.delete(ALL)
@@ -437,7 +580,7 @@ def redrawAll():
             outline= None
         canvas.create_rectangle(g.player[i].space, fill = g.spaceColor,
                                 outline = outline,width=5)
-        
+
         canvas.create_rectangle(g.buttonSpace[i],width=5,
                                 fill='yellow',activefill='light yellow',
                                 disabledfill='grey')
@@ -445,7 +588,7 @@ def redrawAll():
         text(g.buttonSpace[i],g.actionLabels[i]) #provided there are 4 butns
         canvas.create_rectangle(g.potSpace,width=g.potOutlineWidth)
         text(g.potSpace,g.potSize)
-        
+
     #DRAW PLAYER CARDS IF THEY HAVENT FOLDED
         if(g.player[i].folded==False):
             for j in xrange(2):
@@ -454,14 +597,14 @@ def redrawAll():
         drawCard(g.tableCardSpace[i],g.tableCards[i])
 
     drawBlinds()
-    
+
     caption = 'Amount due:'+ str(g.activePlayer.amountDue)
     canvas.create_text(g.screenWidth,0,text=caption,
                        anchor = NE, font = 'Arial 24')
     if(g.diagUp == True):
         drawDiag()
-    
-# - - - - - - - - - - - - - -  - R U N - - - - - - - - - - - - - - - - - - - - 
+
+# - - - - - - - - - - - - - -  - R U N - - - - - - - - - - - - - - - - - - - -
 def run():
     # create the root and the canvas
     global canvas

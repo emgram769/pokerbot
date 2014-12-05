@@ -18,7 +18,7 @@ int get_card(card c, suit * s, rank * r) {
     if (c > (NUM_SUITS * NUM_RANKS)) {
         return -1;
     }
-    
+
     /* Rank is 0 if unkown, and 1-13 if known. */
     *r = (rank)(c % (NUM_RANKS + 1));
 
@@ -92,7 +92,7 @@ static inline bool is_pair(card * cards) {
         int candidate_index = i;
         rank r1; suit s1;
         get_card(cards[i], &s1, &r1);
-        
+
         /* Only better pairs matter. */
         if (r1 < best_pair) continue;
 
@@ -124,7 +124,7 @@ static inline bool is_triple(card * cards) {
     for (int i = 0; i < NUM_BOARD_CARDS + NUM_HELD_CARDS; ++i) {
 
     }
-    
+
     return 0;
 }
 
@@ -133,7 +133,7 @@ static inline bool is_straight(card * cards) {
     for (int i = 0; i < NUM_BOARD_CARDS + NUM_HELD_CARDS; ++i) {
 
     }
-    
+
     return 0;
 }
 
@@ -198,7 +198,7 @@ static inline rank pair_besides(card * cards, rank besides)
 	return brank;
 }
 
-//returns an int from 0 to 4 that represents 
+//returns an int from 0 to 4 that represents
 //the suit of any flush that can be made, or 4 if there is no flush.
 static inline int flushOf(card * cards)
 {
@@ -209,7 +209,7 @@ static inline int flushOf(card * cards)
 	for (int i = 0; i <NUM_BOARD_CARDS + NUM_HELD_CARDS; i++)
 	{
 		suit s = get_suit(cards[i]);
-		switch (s) 
+		switch (s)
 		{
 			case DIAMOND:
 				DiamondCount++;
@@ -244,10 +244,10 @@ static inline rank straightOf(card * cards)
 	//first check for straights with ace low
 	std::replace(cards, cards+NUM_BOARD_CARDS+NUM_HELD_CARDS, ACE_HIGH, ACE_LOW);
 
-	//sort the cards by rank 
+	//sort the cards by rank
 	std::sort(cards, cards + NUM_BOARD_CARDS+NUM_HELD_CARDS, rankComp);
 
-	
+
 	rank highestrun = (rank)0;
 	int conseq = 1;
 	rank lastcard = get_rank(cards[0]);
@@ -271,7 +271,7 @@ static inline rank straightOf(card * cards)
 	}
 	//now check for straights with ace high
 	std::replace(cards, cards+NUM_BOARD_CARDS+NUM_HELD_CARDS, ACE_LOW, ACE_HIGH);
-	//sort the cards by rank 
+	//sort the cards by rank
 	std::sort(cards, cards + NUM_BOARD_CARDS+NUM_HELD_CARDS, rankComp);
 
 	conseq = 1;
@@ -302,10 +302,10 @@ static inline rank checkSF(card * cards, suit s)
 	//first check for straights with ace low
 	std::replace(cards, cards+NUM_BOARD_CARDS+NUM_HELD_CARDS, ACE_HIGH, ACE_LOW);
 
-	//sort the cards by rank 
+	//sort the cards by rank
 	std::sort(cards, cards + NUM_BOARD_CARDS+NUM_HELD_CARDS, rankComp);
 
-	
+
 	rank highestrun = (rank)0;
 	int conseq = 0;
 	rank lastcard = get_rank(cards[0]);
@@ -334,7 +334,7 @@ static inline rank checkSF(card * cards, suit s)
 	}
 	//now check for straights with ace high
 	std::replace(cards, cards+NUM_BOARD_CARDS+NUM_HELD_CARDS, ACE_LOW, ACE_HIGH);
-	//sort the cards by rank 
+	//sort the cards by rank
 	std::sort(cards, cards + NUM_BOARD_CARDS+NUM_HELD_CARDS, rankComp);
 
 	conseq = 0;
@@ -533,7 +533,7 @@ hand best_hand(card * cards)
 						{
 							rank curr = get_rank(cards[i]);
 							if (curr == brank)
-							{	
+							{
 								cards[triplecount] = cards[i];
 								triplecount++;
 								continue;
@@ -546,7 +546,7 @@ hand best_hand(card * cards)
 								fifth = cards[i];
 						}
 						cards[3] = fourth;
-						cards[4] = fifth; 
+						cards[4] = fifth;
 						return (hand){TRIPLE, cards};
 						//ONLY FIRST 5 VALID
 					}
@@ -608,7 +608,7 @@ hand best_hand(card * cards)
 				{
 					rank curr = get_rank(cards[i]);
 					if (curr == brank)
-					{	
+					{
 						cards[paircount] = cards[i];
 						paircount++;
 						continue;
@@ -627,7 +627,7 @@ hand best_hand(card * cards)
 				}
 				cards[2] = third;
 				cards[3] = fourth;
-				cards[4] = fifth; 
+				cards[4] = fifth;
 				return (hand){PAIR, cards};
 				//ONLY FIRST 5 ARE VALID
 			}else
@@ -640,7 +640,7 @@ hand best_hand(card * cards)
 				for(int i =0; i< NUM_BOARD_CARDS+NUM_HELD_CARDS; i++)
 				{
 					rank curr = get_rank(cards[i]);
-					if (curr == brank) 
+					if (curr == brank)
 					{
 						TP[p1count] = cards[i];
 						p1count++;
@@ -657,7 +657,7 @@ hand best_hand(card * cards)
 				}
 				for(int i = 0; i < 4; i++)
 				{
-					cards[i] = TP[i]; 
+					cards[i] = TP[i];
 				}
 				free(TP);
 				cards[4] = fifth;
@@ -766,7 +766,7 @@ int simulate_winner(card *hero, card *adversary) {
 
     // Otherwise, we continue calculating with simulations.
     return 0;
-    
+
 }
 
 int count_cards(card *c);
