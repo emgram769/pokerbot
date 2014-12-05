@@ -824,7 +824,6 @@ double simulate_hands(game_state * game) {
             generated[1] = generate_card(generated, 1);
             generated[2] = generate_card(generated, 2);
             generated[3] = generate_card(generated, 3);
-            //printHand((card *)generated, 4);
             hand_compare_res result = hand_beats(
                 best_hand(
                     make7Hand( generated[0], generated[1], game->board[0],
@@ -853,7 +852,6 @@ double simulate_hands(game_state * game) {
             generated[0] = generate_card(NULL, 0);
             generated[1] = generate_card(generated, 1);
             generated[2] = generate_card(generated, 2);
-            //printHand((card *)generated, 4);
             hand_compare_res result = hand_beats(
                 best_hand(
                     make7Hand( generated[0], generated[1], game->board[0],
@@ -881,7 +879,6 @@ double simulate_hands(game_state * game) {
             card generated[4];
             generated[0] = generate_card(NULL, 0);
             generated[1] = generate_card(generated, 1);
-            //printHand((card *)generated, 4);
             hand_compare_res result = hand_beats(
                 best_hand(
                     make7Hand( generated[0], generated[1], game->board[0],
@@ -901,7 +898,6 @@ double simulate_hands(game_state * game) {
 
         return 1.0 * (double)won / (double)MONTE_CARLO;
     }
-
 
     int r = rand();
     return (double)(r % 1000)/1000;
@@ -1102,6 +1098,8 @@ int main(int argc, char* argv[]) {
     game->board[0] = 5;
     game->board[1] = 8;
     game->board[2] = 9;
+    game->board[3] = 0;
+    game->board[4] = 0;
     std::cout << "running\n";
     std::cout << simulate_hands(game);
     std::cout << "\n";
