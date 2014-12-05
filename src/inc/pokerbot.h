@@ -4,7 +4,8 @@
 #define _POKERBOT_H
 
 #define NUM_SUITS   4
-#define NUM_RANKS   13
+#define NUM_RANKS   14 // Including high ace :)
+#define NUM_DECK_CARDS  (NUM_SUITS * NUM_RANKS)
 
 #define NUM_BOARD_CARDS 5
 #define NUM_HELD_CARDS 2

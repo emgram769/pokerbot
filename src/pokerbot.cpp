@@ -30,7 +30,7 @@ int get_card(card c, suit * s, rank * r) {
 
 card makeCard(rank r, suit s)
 {
-	int res = (NUM_RANKS+1) * (int)s;
+	int res = (NUM_RANKS + 1) * (int)s;
 	res += (int)r;
 	return (card) res;
 }
@@ -42,7 +42,7 @@ rank get_rank(card c)
 
 suit get_suit(card c)
 {
-	return (suit)(c / (NUM_RANKS+1));
+	return (suit)(c / (NUM_RANKS + 1));
 }
 
 /* Checks if a card is known. */
@@ -434,8 +434,9 @@ static inline hand_compare_res hand_beats(hand h1, hand h2)
 				return TIES;
 		}
 	}
-	else
-		return LOSES;
+
+    return LOSES;
+
 }
 
 //returns a hand struct with the best hand that can be made from the 7 cards
@@ -685,18 +686,116 @@ static inline hand best_hand(card * cards)
 
 			break;
 	}
+    return (hand){HIGH_CARD, cards};
 }
 
-void simulate_hands(game_state * game) {
-
+int count_cards(card *cards) {
+    // Count the number of cards we know
+    int num_cards_known = 0;
     for (int i = 0; i < NUM_BOARD_CARDS; ++i) {
-        if (is_known(game->board[i])) {
-        } else {
-
+        if (is_known(cards[i])) {
+            num_cards_known++;
         }
     }
+    return num_cards_known;
+}
 
-    return;
+int chen_score(card c) {
+    if (get_rank(c) < 1) {
+        printf("There's been a huge mistake. \n");
+    }
+    switch (get_rank(c)) {
+        case ACE_HIGH: return 10; break;
+        case ACE_LOW: return 10; break;
+        case KING: return 8; break;
+        case QUEEN: return 7; break;
+        case JACK: return 6; break;
+        default: return get_rank(c) / 2; break;
+    }
+}
+
+int chen_formula(card first, card second) {
+    int base_score = std::max(chen_score(first), chen_score(second));
+    if (base_score < 1) {exit(1);}
+    if (get_rank(first) == get_rank(second)) {
+        base_score = std::max(5, base_score * 2);
+    }
+    if (get_suit(first) == get_suit(second)) {
+        base_score += 2;
+    }
+    int first_rank = get_rank(first);
+    int second_rank = get_rank(second);
+    int gap = std::min(
+    std::min(
+        std::abs(first_rank - second_rank),
+        std::abs(first_rank - second_rank % NUM_RANKS)
+    ), std::min(
+        std::abs(first_rank % NUM_RANKS - second_rank % NUM_RANKS),
+        std::abs(first_rank % NUM_RANKS - second_rank)
+    ));
+    switch (gap) {
+        case 0: break;
+        case 1: base_score++; break;
+        case 2: base_score--; break;
+        case 3: base_score -= 2; break;
+        case 4: base_score -= 4; break;
+        default: base_score -= 5; break;
+    }
+    //printf("score: %d", base_score - gap);
+    return base_score - gap;
+}
+
+// Returns 0 if the hero can tie or win, else 1
+int chens_pocket_algo(card *hero, card *adversary) {
+    int hero_score = chen_formula(hero[0], hero[1]);
+    int adversary_score = chen_formula(adversary[0], adversary[1]);
+    return adversary_score > hero_score;
+}
+
+// We simulate the board to determine a winner.
+// If 0 the hero wins or ties, if 1 the adversary wins
+int simulate_winner(card *hero, card *adversary) {
+    // Not a possible situation.
+    if (count_cards(hero) < 2) {
+        return -1;
+    }
+    // If we are in pockets, we use Chen's algorithm.
+    if (count_cards(hero) == 2) {
+        return chens_pocket_algo(hero, adversary);
+    }
+
+    // Otherwise, we continue calculating with simulations.
+    return 0;
+    
+}
+
+int count_cards(card *c);
+// We model one opponent and simulate their hold cards with monte carlo
+double simulate_hands(game_state * game) {
+    if (!count_cards(game->board)) {
+        unsigned int counted = 0;
+        unsigned int won = 0;
+        for (int i = 1; i < NUM_DECK_CARDS; i++) {
+            if ((card)i == game->hero->cards[0] || (card)i == game->hero->cards[1] || !get_rank((card)i)) {
+                continue;
+            } else {
+                for (int j = 1; j < NUM_DECK_CARDS; j++) {
+                    if ((card)j == game->hero->cards[0] || (card)j == game->hero->cards[1] || j == i || !get_rank((card)j)) {
+                        continue;
+                    } else {
+                        card adversary[NUM_HAND_CARDS] = {(card)i, (card)j, 0, 0, 0};
+                        int we_lost = simulate_winner(game->hero->cards, (card *)&adversary);
+                        if (!we_lost) won++;
+                        counted++;
+                    }
+                }
+            }
+        }
+        return (1.0 * (double)won) / counted;
+    }
+
+    int r = rand();
+    return (double)(r % 1000)/1000;
 }
 
 unsigned long long bot_choice(game_state * game) {
@@ -704,8 +803,7 @@ unsigned long long bot_choice(game_state * game) {
 }
 
 double bot_strength(game_state * game) {
-    int r = rand();
-    return (double)(r % 1000)/1000;
+    return simulate_hands(game);
 }
 
 int init_pokerbot(void) {
@@ -887,6 +985,14 @@ int main(int argc, char* argv[]) {
 
     std::cout << "\n";
     print_hand_compare_res(hand_beats(stHand2,stHand4));
+
+    game_state *game = (game_state*)malloc(sizeof(game_state));
+    game->hero = (player*)calloc(1, sizeof(player));
+    game->hero->cards[0] = 2;
+    game->hero->cards[1] = 7;
+    std::cout << "running\n";
+    std::cout << simulate_hands(game);
+
     return 0;
 }
 

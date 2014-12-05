@@ -19,7 +19,20 @@ static PyObject* py_botChoice(PyObject* self, PyObject* args)
  */
 static PyObject* py_botStrength(PyObject* self, PyObject* args)
 {
-    double strength = bot_strength(NULL);
+    int c1, c2, c3, c4, c5, c6, c7;
+    if (!PyArg_ParseTuple(args, "iiiiiii", &c1, &c2, &c3, &c4, &c5, &c6, &c7)) {
+        return NULL;
+    }
+    game_state *game = (game_state*)malloc(sizeof(game_state));
+    game->hero = (player*)calloc(1, sizeof(player));
+    game->hero->cards[0] = c1;
+    game->hero->cards[1] = c2;
+    game->board[0] = c3;
+    game->board[1] = c4;
+    game->board[2] = c5;
+    game->board[3] = c6;
+    game->board[4] = c7;
+    double strength = bot_strength(game);
     return Py_BuildValue("d", strength);
 }
 
