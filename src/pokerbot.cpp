@@ -416,7 +416,7 @@ void straightSort(card * cards, rank highest)
 }
 
 //returns true iff h1 beats h2
-static inline hand_compare_res hand_beats(hand h1, hand h2)
+hand_compare_res hand_beats(hand h1, hand h2)
 {
 	if((int)h1.type > (int)h2.type)
 		return BEATS;
@@ -441,7 +441,7 @@ static inline hand_compare_res hand_beats(hand h1, hand h2)
 
 //returns a hand struct with the best hand that can be made from the 7 cards
 //ONLY THE FIRST 5 CARDS IN THE RETURNED HAND ARE VALID.
-static inline hand best_hand(card * cards)
+hand best_hand(card * cards)
 {
 	bool straight = false;
 	bool flush = false;
@@ -792,6 +792,9 @@ double simulate_hands(game_state * game) {
             }
         }
         return (1.0 * (double)won) / counted;
+    }
+
+    if (count_cards(game->board) == 3) {
     }
 
     int r = rand();

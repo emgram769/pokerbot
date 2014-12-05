@@ -55,5 +55,10 @@ unsigned long long bot_choice(game_state * game);
 /* This function returns the bots probability of winning the hand. */
 double bot_strength(game_state * game);
 
+card* make7Hand(card c0, card c1,card c2,card c3,card c4,card c5,card c6);
+
+hand best_hand(card * cards);
+
+hand_compare_res hand_beats(hand h1, hand h2);
 #endif /* _POKERBOT_H */
 

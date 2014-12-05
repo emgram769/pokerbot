@@ -37,11 +37,33 @@ static PyObject* py_botStrength(PyObject* self, PyObject* args)
 }
 
 /*
+ * This function returns the best hand
+ */
+static PyObject* py_bestHand(PyObject* self, PyObject* args)
+{
+    int h11, h12, h21, h22, b1, b2, b3, b4, b5;
+
+
+    if (!PyArg_ParseTuple(args, "iiiiiiiii", &h11, &h12, &h21, &h22, &b1, &b2, &b3, &b4, &b5)) {
+        return NULL;
+    }
+    card * h1 = make7Hand(h11, h12, b1, b2, b3, b4, b5);
+    card * h2 = make7Hand(h21, h22, b1, b2, b3, b4, b5);
+    hand bh1 = best_hand(h1);
+    hand bh2 = best_hand(h2);
+    hand_compare_res result = hand_beats(bh1, bh2);
+
+    return Py_BuildValue("i", (int)result);
+}
+
+
+/*
  * Bind Python function names to our C functions
  */
 static PyMethodDef pokerbot_methods[] = {
     {"botChoice", py_botChoice, METH_VARARGS},
     {"botStrength", py_botStrength, METH_VARARGS},
+    {"bestHand", py_bestHand, METH_VARARGS},
     {NULL, NULL} /* Null terminate the array of functions. */
 };
 
