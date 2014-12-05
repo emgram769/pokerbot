@@ -11,6 +11,8 @@
 
 using std::string;
 
+void printHand(card* cards, int len);
+
 /* Gets the suit and rank of a card and returns them through
  * passed in references. Returns 0 on success and -1 on failure.*/
 int get_card(card c, suit * s, rank * r) {
@@ -770,6 +772,25 @@ int simulate_winner(card *hero, card *adversary) {
 }
 
 int count_cards(card *c);
+
+// Generates a card that isn't in the array passed in
+card generate_card(card *gen, int len) {
+    if (gen == NULL) {
+        return makeCard((rank)(rand() % NUM_RANKS + 1), (suit)(rand() % NUM_SUITS));
+    } else {
+        int in = 1;
+        card result;
+        do {
+            result = generate_card(NULL, 0);
+            in = 0;
+            for (int i = 0; i < len; i++) {
+                if (gen[i] == result) in = 1;
+            }
+        } while (in);
+        return result;
+    }
+}
+
 // We model one opponent and simulate their hold cards with monte carlo
 double simulate_hands(game_state * game) {
     if (!count_cards(game->board)) {
@@ -793,8 +814,89 @@ double simulate_hands(game_state * game) {
         }
         return (1.0 * (double)won) / counted;
     }
-
+    
     if (count_cards(game->board) == 3) {
+        unsigned long won = 0;
+
+        for (unsigned long i = 0; i < MONTE_CARLO; i++) {
+            card generated[4];
+            generated[0] = generate_card(NULL, 0);
+            generated[1] = generate_card(generated, 1);
+            generated[2] = generate_card(generated, 2);
+            generated[3] = generate_card(generated, 3);
+            hand_compare_res result = hand_beats(
+                best_hand(
+                    make7Hand( generated[0], generated[1], game->board[0],
+                               game->board[1], game->board[2], generated[2],
+                               generated[3] )
+                ),
+                best_hand(
+                    make7Hand( game->hero->cards[0], game->hero->cards[1],
+                               game->board[0], game->board[1], game->board[2],
+                               generated[2], generated[3] )
+                )
+            );
+            if (result == LOSES || result == TIES) {
+                won++;
+            }
+        }
+
+        return 1.0 * (double)won / (double)MONTE_CARLO;
+    }
+
+    if (count_cards(game->board) == 4) {
+        unsigned long won = 0;
+
+        for (unsigned long i = 0; i < MONTE_CARLO; i++) {
+            card generated[4];
+            generated[0] = generate_card(NULL, 0);
+            generated[1] = generate_card(generated, 1);
+            generated[2] = generate_card(generated, 2);
+            hand_compare_res result = hand_beats(
+                best_hand(
+                    make7Hand( generated[0], generated[1], game->board[0],
+                               game->board[1], game->board[2], generated[2],
+                               game->board[3] )
+                ),
+                best_hand(
+                    make7Hand( game->hero->cards[0], game->hero->cards[1],
+                               game->board[0], game->board[1], game->board[2],
+                               generated[2], game->board[3] )
+                )
+            );
+            if (result == LOSES || result == TIES) {
+                won++;
+            }
+        }
+
+        return 1.0 * (double)won / (double)MONTE_CARLO;
+    }
+
+    if (count_cards(game->board) == 5) {
+        unsigned long won = 0;
+
+        for (unsigned long i = 0; i < MONTE_CARLO; i++) {
+            card generated[4];
+            generated[0] = generate_card(NULL, 0);
+            generated[1] = generate_card(generated, 1);
+            hand_compare_res result = hand_beats(
+                best_hand(
+                    make7Hand( generated[0], generated[1], game->board[0],
+                               game->board[1], game->board[2], game->board[3],
+                               game->board[4] )
+                ),
+                best_hand(
+                    make7Hand( game->hero->cards[0], game->hero->cards[1],
+                               game->board[0], game->board[1], game->board[2],
+                               game->board[3], game->board[4] )
+                )
+            );
+            if (result == LOSES || result == TIES) {
+                won++;
+            }
+        }
+
+        return 1.0 * (double)won / (double)MONTE_CARLO;
     }
 
     int r = rand();
@@ -993,8 +1095,14 @@ int main(int argc, char* argv[]) {
     game->hero = (player*)calloc(1, sizeof(player));
     game->hero->cards[0] = 2;
     game->hero->cards[1] = 7;
+    game->board[0] = 5;
+    game->board[1] = 8;
+    game->board[2] = 9;
+    game->board[3] = 0;
+    game->board[4] = 0;
     std::cout << "running\n";
     std::cout << simulate_hands(game);
+    std::cout << "\n";
 
     return 0;
 }

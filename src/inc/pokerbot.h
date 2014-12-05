@@ -10,6 +10,7 @@
 #define NUM_BOARD_CARDS 5
 #define NUM_HELD_CARDS 2
 #define NUM_HAND_CARDS 5
+#define MONTE_CARLO 100000
 
 enum suit { DIAMOND, CLUB, HEART, SPADE };
 enum rank { UNKNOWN, ACE_LOW, TWO, THREE, FOUR, FIVE,
